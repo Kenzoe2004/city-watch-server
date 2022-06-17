@@ -17,7 +17,7 @@ export class CityInfoService {
 
     async getCityInfo(city: City) {
         this.log.debug('city data');
-        const x = await wiki().page(city.name);
+        const x = await wiki({ apiUrl: 'https://en.wikipedia.org/w/api.php'}).page(city.name);
         const summary: string = await x.summary();
         const rawImages: Array<any> = await x.rawImages();
         const fullInfo: any = await x.fullInfo();
