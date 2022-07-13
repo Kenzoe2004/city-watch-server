@@ -4,7 +4,7 @@
   "description": "City-watch Server",
   "license": "MIT",
   "engines": {
-    "node": "16.15.0"
+    "node": "^16.15.0"
   },
   "homepage": "https://city-watch.ca",
   "author": "",
