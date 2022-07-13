@@ -4,13 +4,14 @@
   "description": "City-watch Server",
   "license": "MIT",
   "engines": {
-    "node": "12.x"
+    "node": "16.15.0"
   },
   "homepage": "https://city-watch.ca",
   "author": "",
   "main": "./dist/app.js",
   "scripts": {
     "deploy": "pm2 deploy ecosystem.config.js production",
+    "deploy-aws": "aws s3 sync build/ s3://citywatch-server",
     "build": "yarn compile && yarn build:docs",
     "build:docs": "typedoc",
     "compile": "tsc",

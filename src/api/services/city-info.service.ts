@@ -28,8 +28,8 @@ export class CityInfoService {
             officialName: fullInfo.general.officialName,
             motto: fullInfo.general.motto,
             summary,
-            image: this.getImage(rawImages, fullInfo.general.imageSkyline),
-            logo: this.getImage(rawImages, fullInfo.general.imageBlankEmblem),
+            image: this.getImage(rawImages, fullInfo.general.imageSkyline, fullInfo.general.image1),
+            logo: this.getImage(rawImages, fullInfo.general.imageBlankEmblem, fullInfo.general.imageBlankEmblem),
             population: fullInfo.general.populationTotal,
             website: fullInfo.website,
             content: content.filter(c => !['See also', 'References', 'External links'].map(g => c.title.includes(g)).reduce((a, g) => a || g, false)),
@@ -37,7 +37,7 @@ export class CityInfoService {
         };
     }
 
-    private getImage(rawImages: Array<any>, name: any) {
-        return rawImages.filter(image => image.title.includes(name)).map(image => image.imageinfo[0]).pop();
+    private getImage(rawImages: Array<any>, name: any, name2: any) {
+        return rawImages.filter(image => image.title.includes(name) || image.title.includes(name2)).map(image => image.imageinfo[0]).pop();
     }
 }
