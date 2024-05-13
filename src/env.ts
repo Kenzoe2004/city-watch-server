@@ -16,7 +16,7 @@ dotenv.config({path: path.join(process.cwd(), `.env${((process.env.NODE_ENV === 
  */
 export const env = {
     node: process.env.NODE_ENV || 'development',
-    isProduction: EnvHelpers.getOsEnv('PRODUCTION') === 'true',
+    isProduction: EnvHelpers.getOsEnv('PRODUCTION') === 'false',
     isTest: process.env.NODE_ENV === 'test',
     logLevel: EnvHelpers.getOsEnv('LOG_LEVEL'),
     app: {
@@ -51,6 +51,8 @@ export const env = {
         username: EnvHelpers.getOsEnv('DATABASE_USERNAME'),
         password: EnvHelpers.getOsEnv('DATABASE_PASSWORD'),
         database: EnvHelpers.getOsEnv('DATABASE_DATABASE'),
+        
+    
     },
     swagger: {
         route: EnvHelpers.getOsEnv('SWAGGER_ROUTE'),

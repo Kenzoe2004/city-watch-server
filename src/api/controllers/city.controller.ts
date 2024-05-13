@@ -69,4 +69,42 @@ export class CityController {
             generation: await this.iesoService.getPowerGenerationBreakdown()
         };
     }
+
+    @Get('/:id/yesterday-weather')
+    async getYesterdayWeather(
+        @Param('id') id: string,
+    ) {
+        const city = await this.cityRepository.findOne(id);
+        if (!city) {
+            throw new Error('City not found');
+        }
+        return {
+        weather: await this.weatherService.getYesterdayWeather(city)
+        }
+    }
+
+    @Get('/:id/HDD')
+    async getHeatingDegreeDay(
+        @Param('id') id: string,
+    ) {
+        const city = await this.cityRepository.findOne(id);
+        if (!city) {
+            throw new Error('City not found');
+        }
+        try {
+            const today = new Date().getDate();
+            // Call the scrapeSite method of WeatherService
+            const html = await this.weatherService.scrapeSite(today);
+            // You might need to parse the HTML and extract the relevant information
+            // For demonstration purposes, returning the HTML directly
+            return {
+                HTML: html
+            };
+        } catch (error) {
+            console.error("Error fetching heating degree day:", error);
+            throw error; // Handle the error as appropriate
+        }
+    }
+
 }
+

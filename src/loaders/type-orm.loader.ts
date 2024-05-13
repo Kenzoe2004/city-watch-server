@@ -19,11 +19,9 @@ export const TypeOrmLoader: MicroframeworkLoader = async (settings: Microframewo
         username: env.database.username,
         password: env.database.password,
         database: env.database.database,
-        synchronize: true,
-        ssl: {rejectUnauthorized: false},
-        logging: ['schema', 'error', 'warn', 'info', 'log'],
+        ssl: { rejectUnauthorized: false }, 
         entities: env.app.dirs.entities,
-    };
+      };
     const connection = await createConnection(options);
 
     if (settings) {

@@ -6,6 +6,7 @@
 
 export class EnvHelpers {
     static getOsEnv(key: string): string {
+        
         if (typeof process.env[key] === 'undefined') {
             throw new Error(`Environment variable ${key} is not set.`);
         }
