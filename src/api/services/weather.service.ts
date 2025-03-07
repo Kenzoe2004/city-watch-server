@@ -2,13 +2,13 @@
  * Copyright 2020 city-watch.ca
  */
 
-import {Service} from 'typedi';
-import {LoggerInterface, LogInjector} from '../../decorators/logger';
-import {env} from '../../env';
+import { Service } from 'typedi';
+import { LoggerInterface, LogInjector } from '../../decorators/logger';
+import { env } from '../../env';
 import axios from 'axios';
 import cheerio from 'cheerio';
-import {City} from '../models/city';
-import {HistoricalWeather} from '../models/historical-weather';
+import { City } from '../models/city';
+import { HistoricalWeather } from '../models/historical-weather';
 
 @Service()
 export class WeatherService {
@@ -19,10 +19,11 @@ export class WeatherService {
         this.log.debug('Starting weather service', env.openWeather.key);
     }
 
-    private static readonly weatherUrlTemplate = (lat, lon) => `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${env.openWeather.key}`;
+    private static readonly weatherUrlTemplate = (lat: number, lon: number) => 
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${env.openWeather.key}`;
 
     async getWeather(city: City): Promise<Partial<HistoricalWeather>> {
-        const {data} = await axios.get(
+        const { data } = await axios.get(
             WeatherService.weatherUrlTemplate(city.lat, city.lon)
         );
         return {
@@ -43,10 +44,10 @@ export class WeatherService {
     async getYesterdayWeather(city: City): Promise<Partial<HistoricalWeather>> {
         const yesterdayDate = new Date();
         yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-        const yesterdayTimestamp = Math.floor(yesterdayDate.getTime() / 1000); // Convert to Unix timestamp
-    
-        const yesterdayWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${city.lat}&lon=${city.lon}&start=${yesterdayTimestamp-86400}&appid=${env.openWeather.key}`;
-    
+        const yesterdayTimestamp = Math.floor(yesterdayDate.getTime() / 1000);
+
+        const yesterdayWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${city.lat}&lon=${city.lon}&start=${yesterdayTimestamp - 86400}&appid=${env.openWeather.key}`;
+
         try {
             const { data } = await axios.get(yesterdayWeatherUrl);
             return {
@@ -55,59 +56,70 @@ export class WeatherService {
                 tempMax: WeatherService.kelvinToCelsius(data.main.temp_max),
             };
         } catch (error) {
-            console.error("Error fetching yesterday's weather:", error);
+            this.log.error("Error fetching yesterday's weather:", error);
             throw error; // Handle the error as appropriate
         }
     }
 
-    private static kelvinToCelsius(k: number) {
+    async getYesterdayAirQuality(city: City): Promise<any> {
+        const yesterdayDate = new Date();
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterdayTimestamp = Math.floor(yesterdayDate.getTime() / 1000);
+
+        const airQualityUrl = `http://api.openweathermap.org/data/2.5/air_pollution/history?lat=${city.lat}&lon=${city.lon}&start=${yesterdayTimestamp}&end=${yesterdayTimestamp + 86400}&appid=${env.openWeather.key}`;
+
+        try {
+            const { data } = await axios.get(airQualityUrl);
+            const airQualityData = data.list[0]; // Assuming the first entry is the correct one
+
+            return {
+                aqi: airQualityData.main.aqi, // Air Quality Index (1-5)
+                components: {
+                    co: airQualityData.components.co, // Carbon Monoxide
+                    no: airQualityData.components.no, // Nitrogen Monoxide
+                    no2: airQualityData.components.no2, // Nitrogen Dioxide
+                    o3: airQualityData.components.o3, // Ozone
+                    so2: airQualityData.components.so2, // Sulphur Dioxide
+                    pm2_5: airQualityData.components.pm2_5, // Fine particles matter
+                    pm10: airQualityData.components.pm10, // Coarse particulate matter
+                    nh3: airQualityData.components.nh3, // Ammonia
+                }
+            };
+        } catch (error) {
+            this.log.error("Error fetching yesterday's air quality:", error);
+            throw error; // Handle the error as appropriate
+        }
+    }
+
+    private static kelvinToCelsius(k: number): number {
         return parseFloat((k - 273.15).toPrecision(2));
     }
 
-    async scrapeSite2(): Promise<string> {
-        try {
-            const response = await axios.get("https://scrapeme.live/shop/");
-            const html = response.data;
-            console.log(html);
-            return html;
-        } catch (error) {
-            console.error("Error scraping site:", error);
-            throw error; // Handle the error as appropriate
-        }
-    }
     async scrapeSite(day: number): Promise<string | undefined> {
         try {
-          const { data } = await axios.get('https://climate.weather.gc.ca/climate_data/daily_data_e.html?StationID=48649&timeframe=2&StartYear=1840&EndYear=2022&type=bar&MeasTypeID=heatingdegreedays&time=LST&Day=24&Year=2024&Month=4#');
-          const $ = cheerio.load(data);
+            const { data } = await axios.get('https://climate.weather.gc.ca/climate_data/daily_data_e.html?StationID=48649&timeframe=2&StartYear=1840&EndYear=2022&type=bar&MeasTypeID=heatingdegreedays&time=LST&Day=24&Year=2025&Month=1#');
+            const $ = cheerio.load(data);
       
-          // Select the second row (assuming the target data is in the second row)
-          const secondRow = $(`tr:nth-child(${day})`);
+            const secondRow = $(`tr:nth-child(${day})`);
       
-          // Check if the row exists
-          if (secondRow.length === 0) {
-            console.error('Target row not found in the HTML');
-            return;
-          }
+            if (secondRow.length === 0) {
+                this.log.error('Target row not found in the HTML');
+                return;
+            }
       
-          // Find the fifth table cell (assuming the target data is in the fifth cell)
-          const targetCell = secondRow.find('td:nth-child(5)');
+            const targetCell = secondRow.find('td:nth-child(5)');
       
-          // Check if the cell exists
-          if (targetCell.length === 0) {
-            console.error('Target cell not found in the second row');
-            return;
-          }
+            if (targetCell.length === 0) {
+                this.log.error('Target cell not found in the second row');
+                return;
+            }
       
-          // Extract the text content
-          const targetValue = targetCell.text().trim();
+            const targetValue = targetCell.text().trim();
       
-          console.log('Target data:', targetValue);
-          return targetValue;
+            this.log.debug('Target data:', targetValue);
+            return targetValue;
         } catch (error) {
-          console.error('Error scraping data:', error);
+            this.log.error('Error scraping data:', error);
         }
-      }
-
-
+    }
 }
-

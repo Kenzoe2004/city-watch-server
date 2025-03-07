@@ -2,13 +2,13 @@
  * Copyright 2020 city-watch.ca
  */
 
-// test controller
-import {Get, JsonController, Param, Post} from 'routing-controllers';
-import {WeatherService} from '../services/weather.service';
-import {IESOService} from '../services/ieso.service';
-import {CityInfoService} from '../services/city-info.service';
-import {CityRepository} from '../repositories/city.repository';
-import {OrmRepository} from 'typeorm-typedi-extensions';
+// Test controller
+import { Get, JsonController, Param, Post } from 'routing-controllers';
+import { WeatherService } from '../services/weather.service';
+import { IESOService } from '../services/ieso.service';
+import { CityInfoService } from '../services/city-info.service';
+import { CityRepository } from '../repositories/city.repository';
+import { OrmRepository } from 'typeorm-typedi-extensions';
 
 @JsonController('/city')
 export class CityController {
@@ -17,8 +17,7 @@ export class CityController {
         private iesoService: IESOService,
         private cityInfoService: CityInfoService,
         @OrmRepository() private readonly cityRepository: CityRepository,
-    ) {
-    }
+    ) {}
 
     @Get('')
     async getAllCities() {
@@ -29,7 +28,7 @@ export class CityController {
     async getCityById(
         @Param('id') id: string,
     ) {
-        const city = await this.cityRepository.findOne(id, {relations: ['country', 'dataPoints']});
+        const city = await this.cityRepository.findOne(id, { relations: ['country', 'dataPoints'] });
         return {
             ...city,
             ...await this.cityInfoService.getCityInfo(city),
@@ -61,7 +60,7 @@ export class CityController {
 
     @Post('/test')
     async test() {
-        const city = await this.cityRepository.findOne({where: {name: 'Oshawa'}});
+        const city = await this.cityRepository.findOne({ where: { name: 'Oshawa' } });
         return {
             cityInfo: await this.cityInfoService.getCityInfo(city),
             weather: await this.weatherService.getWeather(city),
@@ -79,8 +78,21 @@ export class CityController {
             throw new Error('City not found');
         }
         return {
-        weather: await this.weatherService.getYesterdayWeather(city)
+            weather: await this.weatherService.getYesterdayWeather(city)
+        };
+    }
+
+    @Get('/:id/yesterday-air-quality')
+    async getYesterdayAirQuality(
+        @Param('id') id: string,
+    ) {
+        const city = await this.cityRepository.findOne(id);
+        if (!city) {
+            throw new Error('City not found');
         }
+        return {
+            airQuality: await this.weatherService.getYesterdayAirQuality(city)
+        };
     }
 
     @Get('/:id/HDD')
@@ -93,10 +105,7 @@ export class CityController {
         }
         try {
             const today = new Date().getDate();
-            // Call the scrapeSite method of WeatherService
             const html = await this.weatherService.scrapeSite(today);
-            // You might need to parse the HTML and extract the relevant information
-            // For demonstration purposes, returning the HTML directly
             return {
                 HTML: html
             };
@@ -105,6 +114,4 @@ export class CityController {
             throw error; // Handle the error as appropriate
         }
     }
-
 }
-
